@@ -1,1 +1,3 @@
-# Django_REST_plus_React_Mgmt_Sys
+# Django_REST and React
+
+### Using Django REST API and React to build a secure Management System
