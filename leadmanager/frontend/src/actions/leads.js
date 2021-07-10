@@ -1,60 +1,46 @@
-import React, { Component, Fragment } from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
-import { getLeads, deleteLead } from '../../actions/leads';
+import axios from 'axios';
+import { createMessage, returnErrors } from './messages';
+import { tokenConfig } from './auth';
 
-export class Leads extends Component {
-  static propTypes = {
-    leads: PropTypes.array.isRequired,
-    getLeads: PropTypes.func.isRequired,
-    deleteLead: PropTypes.func.isRequired,
-  };
+import { GET_LEADS, DELETE_LEAD, ADD_LEAD } from './types';
 
-  componentDidMount() {
-    this.props.getLeads();
-  }
+// GET LEADS
+export const getLeads = () => (dispatch, getState) => {
+  axios
+    .get('/api/leads/', tokenConfig(getState))
+    .then((res) => {
+      dispatch({
+        type: GET_LEADS,
+        payload: res.data,
+      });
+    })
+    .catch((err) => dispatch(returnErrors(err.response.data, err.response.status)));
+};
 
-  render() {
-    return (
-      <Fragment>
-        <h2>Leads</h2>
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Message</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {this.props.leads.map((lead) => (
-              <tr key={lead.id}>
-                <td>{lead.id}</td>
-                <td>{lead.name}</td>
-                <td>{lead.email}</td>
-                <td>{lead.message}</td>
-                <td>
-                  <button
-                    onClick={this.props.deleteLead.bind(this, lead.id)}
-                    className="btn btn-danger btn-sm"
-                  >
-                    {' '}
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Fragment>
-    );
-  }
-}
+// DELETE LEAD
+export const deleteLead = (id) => (dispatch, getState) => {
+  axios
+    .delete(`/api/leads/${id}/`, tokenConfig(getState))
+    .then((res) => {
+      dispatch(createMessage({ deleteLead: 'Lead Deleted' }));
+      dispatch({
+        type: DELETE_LEAD,
+        payload: id,
+      });
+    })
+    .catch((err) => console.log(err));
+};
 
-const mapStateToProps = (state) => ({
-  leads: state.leads.leads,
-});
-
-export default connect(mapStateToProps, { getLeads, deleteLead })(Leads);
+// ADD LEAD
+export const addLead = (lead) => (dispatch, getState) => {
+  axios
+    .post('/api/leads/', lead, tokenConfig(getState))
+    .then((res) => {
+      dispatch(createMessage({ addLead: 'Lead Added' }));
+      dispatch({
+        type: ADD_LEAD,
+        payload: res.data,
+      });
+    })
+    .catch((err) => dispatch(returnErrors(err.response.data, err.response.status)));
+};
